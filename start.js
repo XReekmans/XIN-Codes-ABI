@@ -1,8 +1,8 @@
 const ExcelJS = require('exceljs');
 
-async function getWorkbook() {
+async function getWorkbook(name) {
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile('Portfolio.xlsx');
+    await workbook.xlsx.readFile(name);
     return workbook;
 }
 
@@ -54,9 +54,19 @@ function codeGenerator(items, brandsMap, subBrandsMap, cTypeMap) {
     const cTypeId = cTypeMap.get(cType);
     const formattedCSize = calculateCSize(cSize);
     const formattedPackaging = calculatePackaging(packaging);
-    console.log(`${brand}:${brandId}, ${subBrand}:${subBrandId}, ${cType}:${cTypeId}, ${cSize}:${formattedCSize}, ${packaging}:${formattedPackaging}`);
-    console.log(`${brandId}${subBrandId}${cTypeId}${formattedCSize}${formattedPackaging}`)
+    //console.log(`${brand}:${brandId}, ${subBrand}:${subBrandId}, ${cType}:${cTypeId}, ${cSize}:${formattedCSize}, ${packaging}:${formattedPackaging}`);
+    //console.log(`${brandId}${subBrandId}${cTypeId}${formattedCSize}${formattedPackaging}`)
     return `${brandId}${subBrandId}${cTypeId}${formattedCSize}${formattedPackaging}`;
+}
+
+function loadCountries(sheet) {
+    const countryMap = new Map();
+    sheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 2) return;
+        const [letterCode, name] = [row.getCell("K").value, row.getCell("I").value];
+        countryMap.set(name, letterCode);
+    });
+    return countryMap;
 }
 
 function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap) {
@@ -76,7 +86,7 @@ function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap) {
 }
 
 async function main() {
-    const workbook = await getWorkbook();
+    const workbook = await getWorkbook('Portfolio.xlsx');
     const mainSheet = workbook.getWorksheet('Export');
 
     const brandsSheet = workbook.getWorksheet('Brands');
@@ -89,6 +99,11 @@ async function main() {
     const cTypeMap = loadCType(CTypeSheet);
 
     iterateRows(mainSheet, brandsMap, subBrandsMap, cTypeMap);
+
+    const MDworkbook = await getWorkbook('MD.xlsx');
+    const MDSheet = MDworkbook.getWorksheet('COUNTRY MD');
+    const countryMap = loadCountries(MDSheet);
+    console.log(countryMap);
 
     await workbook.xlsx.writeFile('Portfolio.xlsx');
 }
