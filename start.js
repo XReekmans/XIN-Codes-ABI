@@ -21,25 +21,41 @@ function codeGenerator(items, brandsMap, subBrandsMap, cTypeMap) {
     return `${brandId}${subBrandId}${cTypeId}${formattedCSize}${formattedPackaging}`;
 }
 
-function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap) {
+function getCountryCode(countryMap, country) {
+    return countryMap.get(country);
+}
+
+function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap, countryMap) {
     const columnCount = sheet.columnCount;
     sheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) {
-            row.getCell(columnCount).value = "XIN"
+            row.getCell(columnCount + 1).value = "XIN"
+            row.getCell(columnCount + 2).value = "L-XIN"
             return;
         } 
         const [brand, subBrand, cType, cSize, packaging] = [row.getCell("M").value, row.getCell("N").value, row.getCell("O").value, row.getCell("P").value, row.getCell("R").value];
         const items = [brand, subBrand, cType, cSize, packaging];
         const code = codeGenerator(items, brandsMap, subBrandsMap, cTypeMap);
 
-        const newCell = row.getCell(columnCount);
-        newCell.value = code;
+        const countryID = getCountryCode(countryMap, row.getCell("L").value);
+
+        const lCode = `${countryID || "!COUNTRY NOT FOUND!"}${code}`;
+
+        const xinValue = row.getCell(columnCount + 1);
+        xinValue.value = code;
+
+        const lxinValue = row.getCell(columnCount + 2);
+        lxinValue.value = lCode;
     });
 }
 
 async function main() {
     const workbook = await getWorkbook('assets/Portfolio.xlsx');
     const mainSheet = workbook.getWorksheet('Export');
+
+    const MDworkbook = await getWorkbook('assets/MD.xlsx');
+    const MDSheet = MDworkbook.getWorksheet('COUNTRY MD');
+    const countryMap = loadCountries(MDSheet);
 
     const brandsSheet = workbook.getWorksheet('Brands');
     const brandsMap = load(brandsSheet);
@@ -50,12 +66,7 @@ async function main() {
     const CTypeSheet = workbook.getWorksheet('C Type');
     const cTypeMap = load(CTypeSheet);
 
-    iterateRows(mainSheet, brandsMap, subBrandsMap, cTypeMap);
-
-    const MDworkbook = await getWorkbook('assets/MD.xlsx');
-    const MDSheet = MDworkbook.getWorksheet('COUNTRY MD');
-    const countryMap = loadCountries(MDSheet);
-    console.log(countryMap);
+    iterateRows(mainSheet, brandsMap, subBrandsMap, cTypeMap, countryMap);
 
     await workbook.xlsx.writeFile('assets/Portfolio.xlsx');
 }
