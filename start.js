@@ -25,7 +25,16 @@ function getCountryCode(countryMap, country) {
     return countryMap.get(country);
 }
 
-function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap, countryMap) {
+function colorCell(cell, color) {
+    cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: color }
+    };
+}
+
+function iterateRows(sheet, maps, fileArray) {
+    [brandsMap, subBrandsMap, cTypeMap, countryMap] = maps;
     const columnCount = sheet.columnCount;
     sheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) {
@@ -39,14 +48,30 @@ function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap, countryMap) {
 
         const countryID = getCountryCode(countryMap, row.getCell("L").value);
 
-        const lCode = `${countryID || "!COUNTRY NOT FOUND!"}${code}`;
-
+        const lCode = `${countryID || "!CNF!"}${code}`;
+        
         const xinValue = row.getCell(columnCount + 1);
         xinValue.value = code;
 
         const lxinValue = row.getCell(columnCount + 2);
         lxinValue.value = lCode;
+
+        fileArray.push([row.getCell("E").value, row.getCell("F").value, row.getCell("L").value, code, lCode]);
+
+        if (countryID === undefined) colorCell(lxinValue, 'FFFF0000');
     });
+}
+
+function addCodesSheet(workbook, fileArray) {
+    const newSheet = workbook.addWorksheet('Codes');
+    newSheet.columns = [
+        { header: 'G-ERP', key: 'gerp' },
+        { header: 'Description', key: 'description' },
+        { header: 'Country', key: 'country' },
+        { header: 'XIN', key: 'xin' },
+        { header: 'L-XIN', key: 'lxin' }
+    ];
+    newSheet.addRows(fileArray);
 }
 
 async function main() {
@@ -66,7 +91,11 @@ async function main() {
     const CTypeSheet = workbook.getWorksheet('C Type');
     const cTypeMap = load(CTypeSheet);
 
-    iterateRows(mainSheet, brandsMap, subBrandsMap, cTypeMap, countryMap);
+    const fileArray = [];
+
+    iterateRows(mainSheet, [brandsMap, subBrandsMap, cTypeMap, countryMap]);
+
+    addCodesSheet(workbook, fileArray);
 
     await workbook.xlsx.writeFile('assets/Portfolio.xlsx');
 }
