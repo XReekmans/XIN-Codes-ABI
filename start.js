@@ -1,50 +1,12 @@
 const ExcelJS = require('exceljs');
 
+const { loadSubBrands, loadCType, loadBrands, loadCountries } = require('./loaders');
+const { calculateCSize, calculatePackaging } = require('./calculators');
+
 async function getWorkbook(name) {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(name);
     return workbook;
-}
-
-function loadBrands(sheet) {
-    const brandsMap = new Map();
-    sheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) return;
-        const [,id, name] = row.values;
-        brandsMap.set(name, id);
-    });
-    return brandsMap;
-}
-
-function loadSubBrands(sheet) {
-    const subBrandsMap = new Map();
-    sheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) return;
-        const [,id, name] = row.values;
-        subBrandsMap.set(name, id);
-    });
-    return subBrandsMap;
-}
-
-function loadCType(sheet) {
-    const cTypeMap = new Map();
-    sheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) return;
-        const [,id, name] = row.values;
-        cTypeMap.set(name, id);
-    });
-    return cTypeMap;
-}
-
-function calculateCSize(number) {
-    return Math.round(number * 1000).toString().padStart(5, "0");
-}
-
-function calculatePackaging(value) {
-    if (value === null) return 'null';
-    const [firstPart, secondPart] = value.split('x');
-    const formattedValue = `${firstPart.padStart(2, '0')}${secondPart.padStart(2, '0')}`;
-    return formattedValue;
 }
 
 function codeGenerator(items, brandsMap, subBrandsMap, cTypeMap) {
@@ -57,16 +19,6 @@ function codeGenerator(items, brandsMap, subBrandsMap, cTypeMap) {
     //console.log(`${brand}:${brandId}, ${subBrand}:${subBrandId}, ${cType}:${cTypeId}, ${cSize}:${formattedCSize}, ${packaging}:${formattedPackaging}`);
     //console.log(`${brandId}${subBrandId}${cTypeId}${formattedCSize}${formattedPackaging}`)
     return `${brandId}${subBrandId}${cTypeId}${formattedCSize}${formattedPackaging}`;
-}
-
-function loadCountries(sheet) {
-    const countryMap = new Map();
-    sheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 2) return;
-        const [letterCode, name] = [row.getCell("K").value, row.getCell("I").value];
-        countryMap.set(name, letterCode);
-    });
-    return countryMap;
 }
 
 function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap) {
@@ -86,7 +38,7 @@ function iterateRows(sheet, brandsMap, subBrandsMap, cTypeMap) {
 }
 
 async function main() {
-    const workbook = await getWorkbook('Portfolio.xlsx');
+    const workbook = await getWorkbook('assets/Portfolio.xlsx');
     const mainSheet = workbook.getWorksheet('Export');
 
     const brandsSheet = workbook.getWorksheet('Brands');
@@ -100,12 +52,12 @@ async function main() {
 
     iterateRows(mainSheet, brandsMap, subBrandsMap, cTypeMap);
 
-    const MDworkbook = await getWorkbook('MD.xlsx');
+    const MDworkbook = await getWorkbook('assets/MD.xlsx');
     const MDSheet = MDworkbook.getWorksheet('COUNTRY MD');
     const countryMap = loadCountries(MDSheet);
     console.log(countryMap);
 
-    await workbook.xlsx.writeFile('Portfolio.xlsx');
+    await workbook.xlsx.writeFile('assets/Portfolio.xlsx');
 }
 
 main().catch(console.error);
