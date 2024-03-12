@@ -1,6 +1,6 @@
 const ExcelJS = require('exceljs');
 
-const { loadSubBrands, loadCType, loadBrands, loadCountries } = require('./loaders');
+const { load, loadCountries } = require('./loaders');
 const { calculateCSize, calculatePackaging } = require('./calculators');
 
 async function getWorkbook(name) {
@@ -42,13 +42,13 @@ async function main() {
     const mainSheet = workbook.getWorksheet('Export');
 
     const brandsSheet = workbook.getWorksheet('Brands');
-    const brandsMap = loadBrands(brandsSheet);
+    const brandsMap = load(brandsSheet);
 
     const subBrandsSheet = workbook.getWorksheet('Sub Brands');
-    const subBrandsMap = loadSubBrands(subBrandsSheet);
+    const subBrandsMap = load(subBrandsSheet);
 
     const CTypeSheet = workbook.getWorksheet('C Type');
-    const cTypeMap = loadCType(CTypeSheet);
+    const cTypeMap = load(CTypeSheet);
 
     iterateRows(mainSheet, brandsMap, subBrandsMap, cTypeMap);
 

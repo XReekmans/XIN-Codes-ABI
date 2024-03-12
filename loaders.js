@@ -1,26 +1,4 @@
-function loadSubBrands(sheet) {
-    const subBrandsMap = new Map();
-    sheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) return;
-        const [, id, name] = row.values;
-        subBrandsMap.set(name, id);
-    });
-    return subBrandsMap;
-}
-exports.loadSubBrands = loadSubBrands;
-
-function loadCType(sheet) {
-    const cTypeMap = new Map();
-    sheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) return;
-        const [, id, name] = row.values;
-        cTypeMap.set(name, id);
-    });
-    return cTypeMap;
-}
-exports.loadCType = loadCType;
-
-function loadBrands(sheet) {
+function load(sheet) {
     const brandsMap = new Map();
     sheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) return;
@@ -29,7 +7,7 @@ function loadBrands(sheet) {
     });
     return brandsMap;
 }
-exports.loadBrands = loadBrands;
+exports.load = load;
 
 function loadCountries(sheet) {
     const countryMap = new Map();
