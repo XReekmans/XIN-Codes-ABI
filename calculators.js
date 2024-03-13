@@ -1,4 +1,3 @@
-
 function calculateCSize(number) {
     return Math.round(number * 1000).toString().padStart(5, "0");
 }

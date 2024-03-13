@@ -93,7 +93,7 @@ async function main() {
 
     const fileArray = [];
 
-    iterateRows(mainSheet, [brandsMap, subBrandsMap, cTypeMap, countryMap]);
+    iterateRows(mainSheet, [brandsMap, subBrandsMap, cTypeMap, countryMap], fileArray);
 
     addCodesSheet(workbook, fileArray);
 
